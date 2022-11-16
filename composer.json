@@ -1,16 +1,16 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "deligoez/speck-cipher",
+    "description": "This is my package speck-cipher",
     "keywords": [
-        ":vendor_name",
-        ":package_slug"
+        "deligoez",
+        "speck-cipher"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/deligoez/speck-cipher",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Yunus Emre Deligöz",
+            "email": "ye@deligoz.me",
             "role": "Developer"
         }
     ],
@@ -24,12 +24,12 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src"
+            "Deligoez\\Speck\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests"
+            "Deligoez\\Speck\\Tests\\": "tests"
         }
     },
     "scripts": {
