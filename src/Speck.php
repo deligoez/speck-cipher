@@ -44,7 +44,7 @@ class Speck
 
         // Key size validation
         if (! array_key_exists($this->keySize, self::VALID_SETUPS[$this->blockSize])) {
-            InvalidKeySizeException::build($this->$this->blockSize);
+            InvalidKeySizeException::build($this->blockSize);
         }
 
         $this->wordSize = $this->blockSize >> 1;
