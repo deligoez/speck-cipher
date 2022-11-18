@@ -78,8 +78,10 @@ class Speck
         }
     }
 
+    // region Encryption
+
     // Complete One Round of Feistel Operation
-    public function encrypt_round($x, $y, $k): array
+    protected function encrypt_round($x, $y, $k): array
     {
         $rs_x = (($x << ($this->wordSize - $this->alphaShift)) + ($x >> $this->alphaShift)) & $this->modMask;
         $add_sxy = ($rs_x + $y) & $this->modMask;
@@ -90,29 +92,7 @@ class Speck
         return [$new_x, $new_y];
     }
 
-    private function gmp_shiftl(int|GMP $x, int $n): GMP
-    {
-        return gmp_mul($x, gmp_pow(2, $n));
-    }
-
-    private function gmp_shiftr(int|GMP $x, int $n): GMP
-    {
-        return gmp_div($x, gmp_pow(2, $n));
-    }
-
-    public function encrypt(int $plainText): GMP
-    {
-        $b = gmp_and($this->gmp_shiftr($plainText, $this->wordSize), $this->modMask);
-        $a = gmp_and($plainText, $this->modMask);
-
-        [$b, $a] = $this->encrypt_function($b, $a);
-
-        $ciphertext = ($b << $this->wordSize) + $a;
-
-        return $ciphertext;
-    }
-
-    public function encrypt_function(GMP $upperWord, GMP $lowerWord): array
+    protected function encrypt_function(GMP $upperWord, GMP $lowerWord): array
     {
         $x = $upperWord;
         $y = $lowerWord;
@@ -128,4 +108,36 @@ class Speck
 
         return [$x, $y];
     }
+
+    public function encrypt(int $plainText): GMP
+    {
+        $b = gmp_and($this->gmp_shiftr($plainText, $this->wordSize), $this->modMask);
+        $a = gmp_and($plainText, $this->modMask);
+
+        [$b, $a] = $this->encrypt_function($b, $a);
+
+        $ciphertext = ($b << $this->wordSize) + $a;
+
+        return $ciphertext;
+    }
+
+    // endregion
+
+    // region Decryption
+
+    // endregion
+
+    // region Helpers
+
+    private function gmp_shiftl(int|GMP $x, int $n): GMP
+    {
+        return gmp_mul($x, gmp_pow(2, $n));
+    }
+
+    private function gmp_shiftr(int|GMP $x, int $n): GMP
+    {
+        return gmp_div($x, gmp_pow(2, $n));
+    }
+
+    // endregion
 }
