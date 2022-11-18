@@ -109,7 +109,7 @@ class Speck
         return [$x, $y];
     }
 
-    public function encrypt(int $plainText): GMP
+    public function encrypt(int|GMP $plainText): GMP
     {
         $b = gmp_and($this->gmp_shiftr($plainText, $this->wordSize), $this->modMask);
         $a = gmp_and($plainText, $this->modMask);
@@ -124,6 +124,34 @@ class Speck
     // endregion
 
     // region Decryption
+
+    protected function decrypt_function(GMP $upperWord, GMP $lowerWord): array
+    {
+        $x = $upperWord;
+        $y = $lowerWord;
+
+        foreach (array_reverse($this->keySchedule) as $k) {
+            $xor_xy = $x ^ $y;
+            $y = (($xor_xy << ($this->wordSize - $this->betaShift)) + ($xor_xy >> $this->betaShift)) & $this->modMask;
+            $xor_xk = $x ^ $k;
+            $msub = (($xor_xk - $y) + $this->modMaskSub) % $this->modMaskSub;
+            $x = (($msub >> ($this->wordSize - $this->alphaShift)) + ($msub << $this->alphaShift)) & $this->modMask;
+        }
+
+        return [$x, $y];
+    }
+
+    public function decrypt(int|GMP $ciphertext): GMP|int
+    {
+        $b = ($ciphertext >> $this->wordSize) & $this->modMask;
+        $a = $ciphertext & $this->modMask;
+
+        [$b, $a] = $this->decrypt_function($b, $a);
+
+        $plaintext = ($b << $this->wordSize) + $a;
+
+        return $plaintext;
+    }
 
     // endregion
 
