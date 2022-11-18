@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Deligoez\Speck\Exceptions;
 
-use Deligoez\Speck\Speck2;
+use Deligoez\Speck\Speck;
 use Exception;
 
 class InvalidBlockSizeException extends Exception
@@ -13,9 +15,9 @@ class InvalidBlockSizeException extends Exception
     public static function build(): void
     {
         $message =
-            'Invalid block size. '.
-            'Please use one of the following available block sizes: '.
-            implode(', ', array_keys(Speck2::VALID_SETUPS));
+            'Invalid block size. ' .
+            'Please use one of the following available block sizes: ' .
+            implode(', ', array_keys(Speck::VALID_SETUPS));
 
         throw new InvalidBlockSizeException($message);
     }
