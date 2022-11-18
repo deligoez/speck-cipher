@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Deligoez\Speck;
 
 class SpeckV1
@@ -30,9 +32,6 @@ class SpeckV1
     /**
      * Complete one round of Feistel operation.
      *
-     * @param  int|null  $x
-     * @param  int  $y
-     * @param  int  $k
      * @return int[]
      */
     public function round(?int $x, int $y, int $k): array
@@ -48,11 +47,6 @@ class SpeckV1
 
     /**
      * Complete one round of inverse Feistel operation.
-     *
-     * @param  int|null  $x
-     * @param  int  $y
-     * @param  int  $k
-     * @return array
      */
     public function roundReverse(?int $x, int $y, int $k): array
     {

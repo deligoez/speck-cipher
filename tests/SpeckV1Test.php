@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Deligoez\Speck\SpeckV1;
 
 test('Speck 32/64 offical vector', function (): void {

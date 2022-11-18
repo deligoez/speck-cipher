@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Deligoez\Speck;
 
 use Deligoez\Speck\Exceptions\InvalidBlockSizeException;
@@ -16,7 +18,6 @@ class Speck
         96 => [96 => 28, 144 => 29],
         128 => [128 => 32, 192 => 33, 256 => 34],
     ];
-
     protected const VALID_MODES = ['ECB', 'CTR', 'CBC', 'PCBC', 'CFB', 'OFB'];
 
     protected int $wordSize;
@@ -88,7 +89,6 @@ class Speck
 
         return [$new_x, $new_y];
     }
-
 
     private function gmp_shiftl(int|GMP $x, int $n): GMP
     {
