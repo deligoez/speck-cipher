@@ -2,7 +2,7 @@
 
 namespace Deligoez\Speck;
 
-class Speck
+class SpeckV1
 {
     protected int $bitMax;
     protected int $bitMask;
@@ -27,6 +27,14 @@ class Speck
         return (($x << $numberOfRotations) & $this->bitMask) | ($x >> ($this->bits - $numberOfRotations));
     }
 
+    /**
+     * Complete one round of Feistel operation.
+     *
+     * @param  int|null  $x
+     * @param  int  $y
+     * @param  int  $k
+     * @return int[]
+     */
     public function round(?int $x, int $y, int $k): array
     {
         $x = $this->rotateRight(x: $x, numberOfRotations: $this->rightRotations);
@@ -38,6 +46,14 @@ class Speck
         return [$x, $y];
     }
 
+    /**
+     * Complete one round of inverse Feistel operation.
+     *
+     * @param  int|null  $x
+     * @param  int  $y
+     * @param  int  $k
+     * @return array
+     */
     public function roundReverse(?int $x, int $y, int $k): array
     {
         $y ^= $x;

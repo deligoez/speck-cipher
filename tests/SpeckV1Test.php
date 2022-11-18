@@ -1,20 +1,33 @@
 <?php
 
-use Deligoez\Speck\Speck;
+use Deligoez\Speck\SpeckV1;
+
+test('Speck 32/64 offical vector', function (): void {
+    $keys = [0x1918, 0x1110, 0x0908, 0x0100];
+    $plainText = [0x6574, 0x694C];
+    $cipherText = [0xA868, 0x42F2];
+
+    $speck = new SpeckV1(bits: 64, rounds: 22);
+
+    dd($speck->encryptRaw($plainText, $keys));
+
+//    $this->assertEquals($speck->encrypt($plainText, $key), $cipherText);
+//    $this->assertEquals($speck->decrypt($cipherText, $key), $plainText);
+});
 
 test('Speck 32/64', function (): void {
     $key = [0x1918, 0x1110, 0x0908, 0x0100];
     $plainText = 0x6574694C;
     $cipherText = 0xA86842F2;
 
-    $speck = new Speck(bits: 16, rounds: 22);
+    $speck = new SpeckV1(bits: 16, rounds: 22);
 
     $this->assertEquals($speck->encrypt($plainText, $key), $cipherText);
     $this->assertEquals($speck->decrypt($cipherText, $key), $plainText);
 });
 
 it('can test', function () {
-    $speck = new Speck(
+    $speck = new SpeckV1(
         bits: 16,
         rounds: 22,
         rightRotations: 7,
@@ -61,7 +74,7 @@ test('try', function (): void {
             $testValues[] = random_int(1, $maxTestValue);
         }
 
-        $speck = new Speck($setting['bits'], $setting['rounds'], $setting['rightRotations'], $setting['leftRotations']);
+        $speck = new SpeckV1($setting['bits'], $setting['rounds'], $setting['rightRotations'], $setting['leftRotations']);
         foreach ($testValues as $testValue) {
             foreach ($keys as $key) {
                 $cipher = $speck->encrypt($testValue, $key);
