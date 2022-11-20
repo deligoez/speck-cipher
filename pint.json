@@ -13,9 +13,12 @@
     "no_superfluous_phpdoc_tags": {
       "allow_mixed": true
     },
+    "phpdoc_align": true,
     "phpdoc_line_span": {
       "property": "single"
     },
+    "phpdoc_order": true,
+    "phpdoc_separation": true,
     "phpdoc_var_annotation_correct_order": true,
     "binary_operator_spaces": {
       "default": "single_space",
@@ -40,6 +43,13 @@
     },
     "types_spaces": {
       "space": "none"
-    }
+    },
+    "method_chaining_indentation": true,
+    "explicit_string_variable": true,
+    "void_return": true,
+    "types_spaces": true,
+    "compact_nullable_typehint": true,
+    "no_unused_imports": true,
+    "whitespace_after_comma_in_array": true
   }
 }
