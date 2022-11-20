@@ -88,9 +88,6 @@ class Speck
     /**
      * Complete one round of Feistel operation.
      *
-     * @param  \GMP  $upperWord
-     * @param  \GMP  $lowerWord
-     * @param  \GMP  $k
      *
      * @return array{0: GMP, 1: GMP }
      */
@@ -109,8 +106,6 @@ class Speck
     /**
      * Returns the encrypted word pairs.
      *
-     * @param  \GMP  $upperWord
-     * @param  \GMP  $lowerWord
      *
      * @return array{ 0: GMP, 1: GMP }
      */
@@ -125,10 +120,6 @@ class Speck
 
     /**
      * Returns the encrypted plain text.
-     *
-     * @param  \GMP|string|int  $plainText
-     *
-     * @return \GMP
      */
     public function encrypt(GMP|string|int $plainText): GMP
     {
@@ -147,9 +138,6 @@ class Speck
     /**
      * Complete one round of reverse Feistel operation.
      *
-     * @param  \GMP  $upperWord
-     * @param  \GMP  $lowerWord
-     * @param  \GMP  $k
      *
      * @return array{0: GMP, 1: GMP }
      */
@@ -168,8 +156,6 @@ class Speck
     /**
      * Returns the decrypted word pairs.
      *
-     * @param  \GMP  $upperWord
-     * @param  \GMP  $lowerWord
      *
      * @return array{ 0: GMP, 1: GMP }
      */
@@ -184,10 +170,6 @@ class Speck
 
     /**
      * Returns the decrypted plain text.
-     *
-     * @param  \GMP|string|int  $ciphertext
-     *
-     * @return \GMP|int
      */
     public function decrypt(GMP|string|int $ciphertext): GMP|int
     {

@@ -6,7 +6,7 @@ use Deligoez\Speck\Exceptions\InvalidBlockSizeException;
 use Deligoez\Speck\Exceptions\InvalidKeySizeException;
 use Deligoez\Speck\Speck;
 
-it('throws InvalidBlockSizeException for invalid block sizes', function () {
+it('throws InvalidBlockSizeException for invalid block sizes', function (): void {
     new Speck(key: 0x1918111009080100, blockSize: 1);
 })->expectException(InvalidBlockSizeException::class);
 
