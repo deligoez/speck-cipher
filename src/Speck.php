@@ -67,7 +67,7 @@ class Speck
         $this->alphaShift = $this->blockSize === 32 ? 7 : 8;
 
         // Parse the given key and truncate it to the key length
-        $this->key &= ((gmp_pow(2, $this->keySize)) - 1);
+        $this->key = gmp_and($this->key, ((gmp_pow(2, $this->keySize)) - 1));
 
         // Pre-compile key schedule
         $this->keySchedule = [gmp_and($this->key, $this->modMask)];
@@ -88,20 +88,32 @@ class Speck
     /**
      * Complete one round of Feistel operation.
      *
+     * @param  \GMP  $upperWord
+     * @param  \GMP  $lowerWord
+     * @param  \GMP  $k
      *
-     * @return int[]
+     * @return array{0: GMP, 1: GMP }
      */
     protected function round(GMP $upperWord, GMP $lowerWord, GMP $k): array
     {
-        $rs_x = (($upperWord << ($this->wordSize - $this->alphaShift)) + ($upperWord >> $this->alphaShift)) & $this->modMask;
-        $add_sxy = ($rs_x + $lowerWord) & $this->modMask;
-        $new_x = $k ^ $add_sxy;
-        $ls_y = (($lowerWord >> ($this->wordSize - $this->betaShift)) + ($lowerWord << $this->betaShift)) & $this->modMask;
-        $new_y = $new_x ^ $ls_y;
+        $upperWord = gmp_and(gmp_add($this->gmp_shiftl($upperWord, ($this->wordSize - $this->alphaShift)), $this->gmp_shiftr($upperWord, $this->alphaShift)), $this->modMask);
+        $upperWord = gmp_and(gmp_add($upperWord, $lowerWord), $this->modMask);
+        $upperWord = gmp_xor($k, $upperWord);
 
-        return [$new_x, $new_y];
+        $lowerWord = gmp_and(gmp_add($this->gmp_shiftr($lowerWord, ($this->wordSize - $this->betaShift)), ($this->gmp_shiftl($lowerWord, $this->betaShift))), $this->modMask);
+        $lowerWord = gmp_xor($upperWord, $lowerWord);
+
+        return [$upperWord, $lowerWord];
     }
 
+    /**
+     * Returns the encrypted word pairs.
+     *
+     * @param  \GMP  $upperWord
+     * @param  \GMP  $lowerWord
+     *
+     * @return array{ 0: GMP, 1: GMP }
+     */
     protected function encryptRaw(GMP $upperWord, GMP $lowerWord): array
     {
         foreach ($this->keySchedule as $k) {
@@ -111,7 +123,14 @@ class Speck
         return [$upperWord, $lowerWord];
     }
 
-    public function encrypt(int|GMP $plainText): GMP
+    /**
+     * Returns the encrypted plain text.
+     *
+     * @param  \GMP|string|int  $plainText
+     *
+     * @return \GMP
+     */
+    public function encrypt(GMP|string|int $plainText): GMP
     {
         $b = gmp_and($this->gmp_shiftr($plainText, $this->wordSize), $this->modMask);
         $a = gmp_and($plainText, $this->modMask);
@@ -128,22 +147,32 @@ class Speck
     /**
      * Complete one round of reverse Feistel operation.
      *
-     * @param $upperWord
-     * @param $lowerWord
-     * @param $k
-     * @return int[]
+     * @param  \GMP  $upperWord
+     * @param  \GMP  $lowerWord
+     * @param  \GMP  $k
+     *
+     * @return array{0: GMP, 1: GMP }
      */
     protected function reverseRound(GMP $upperWord, GMP $lowerWord, GMP $k): array
     {
-        $xor_xy = $upperWord ^ $lowerWord;
-        $lowerWord = (($xor_xy << ($this->wordSize - $this->betaShift)) + ($xor_xy >> $this->betaShift)) & $this->modMask;
-        $xor_xk = $upperWord ^ $k;
-        $msub = (($xor_xk - $lowerWord) + $this->modMaskSub) % $this->modMaskSub;
-        $upperWord = (($msub >> ($this->wordSize - $this->alphaShift)) + ($msub << $this->alphaShift)) & $this->modMask;
+        $upperWord = gmp_xor($upperWord, $lowerWord);
+        $upperWord = gmp_and(gmp_add($this->gmp_shiftl($upperWord, ($this->wordSize - $this->betaShift)), ($this->gmp_shiftr($upperWord, $this->betaShift))), $this->modMask);
+        $upperWord = gmp_xor($upperWord, $k);
+
+        $lowerWord = gmp_mod(gmp_add(gmp_sub($upperWord, $lowerWord), $this->modMaskSub), $this->modMaskSub);
+        $lowerWord = gmp_and(gmp_add($this->gmp_shiftr($lowerWord, ($this->wordSize - $this->alphaShift)), ($this->gmp_shiftl($lowerWord, $this->alphaShift))), $this->modMask);
 
         return [$upperWord, $lowerWord];
     }
 
+    /**
+     * Returns the decrypted word pairs.
+     *
+     * @param  \GMP  $upperWord
+     * @param  \GMP  $lowerWord
+     *
+     * @return array{ 0: GMP, 1: GMP }
+     */
     protected function decryptRaw(GMP $upperWord, GMP $lowerWord): array
     {
         foreach (array_reverse($this->keySchedule) as $k) {
@@ -153,7 +182,14 @@ class Speck
         return [$upperWord, $lowerWord];
     }
 
-    public function decrypt(int|GMP $ciphertext): GMP|int
+    /**
+     * Returns the decrypted plain text.
+     *
+     * @param  \GMP|string|int  $ciphertext
+     *
+     * @return \GMP|int
+     */
+    public function decrypt(GMP|string|int $ciphertext): GMP|int
     {
         $b = gmp_and($this->gmp_shiftr($ciphertext, $this->wordSize), $this->modMask);
         $a = gmp_and($ciphertext, $this->modMask);
@@ -167,12 +203,12 @@ class Speck
 
     // region Helpers
 
-    private function gmp_shiftl(int|GMP $number, int $numberOfShifts): GMP
+    protected function gmp_shiftl(GMP|string|int $number, int $numberOfShifts): GMP
     {
         return gmp_mul($number, gmp_pow(2, $numberOfShifts));
     }
 
-    private function gmp_shiftr(int|GMP $number, int $numberOfShifts): GMP
+    protected function gmp_shiftr(GMP|string|int $number, int $numberOfShifts): GMP
     {
         return gmp_div($number, gmp_pow(2, $numberOfShifts));
     }
