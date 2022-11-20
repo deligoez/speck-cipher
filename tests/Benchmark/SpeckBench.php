@@ -11,7 +11,7 @@ use PhpBench\Benchmark\Metadata\Annotations\Iterations;
 use PhpBench\Benchmark\Metadata\Annotations\Revs;
 use PhpBench\Benchmark\Metadata\Annotations\Warmup;
 
-class EncryptBench
+class SpeckBench
 {
     protected Speck $cipher;
     protected GMP $plaintxt;
