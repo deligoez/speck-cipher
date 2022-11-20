@@ -37,7 +37,7 @@
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint",
-        "bench": "vendor/bin/phpbench run tests/Benchmark --report=default"
+        "bench": "vendor/bin/phpbench run tests/Benchmark --report=aggregate --retry-threshold=5"
     },
     "config": {
         "sort-packages": true,
