@@ -24,8 +24,14 @@ class Speck
     protected int $rounds;
     protected GMP $modMask;
     protected GMP $modMaskSub;
+
+    /** Number of left rotations */
     protected int $betaShift;
+
+    /** Number of right rotations */
     protected int $alphaShift;
+
+    /** @var array<GMP> */
     protected array $keySchedule;
 
     /**
@@ -51,10 +57,10 @@ class Speck
         $this->rounds = self::VALID_SETUPS[$this->blockSize][$keySize];
 
         // Mod mask for modular subtraction
-        $this->modMaskSub = gmp_pow(2, $this->wordSize);
+        $this->modMaskSub = gmp_pow(num: 2, exponent: $this->wordSize);
 
         // Create properly sized bit mask for truncating addition and left shift outputs
-        $this->modMask = gmp_sub($this->modMaskSub, 1);
+        $this->modMask = gmp_sub($this->modMaskSub, num2: 1);
 
         // Setup circular shift parameters
         $this->betaShift = $this->blockSize === 32 ? 2 : 3;
@@ -65,6 +71,7 @@ class Speck
 
         // Pre-compile key schedule
         $this->keySchedule = [gmp_and($this->key, $this->modMask)];
+
         $lSchedule = [];
         $count = (int) ($this->keySize / $this->wordSize);
         for ($i = 1; $i < $count; $i++) {
@@ -72,41 +79,38 @@ class Speck
         }
 
         for ($i = 0; $i < $this->rounds - 1; $i++) {
-            $new_l_k = $this->encrypt_round($lSchedule[$i], $this->keySchedule[$i], $i);
-            $lSchedule[] = $new_l_k[0];
-            $this->keySchedule[] = $new_l_k[1];
+            [$lSchedule[], $this->keySchedule[]] = $this->round($lSchedule[$i], $this->keySchedule[$i], $i);
         }
     }
 
     // region Encryption
 
-    // Complete One Round of Feistel Operation
-    protected function encrypt_round($x, $y, $k): array
+    /**
+     * Complete one round of Feistel operation.
+     *
+     * @param $upperWord
+     * @param $lowerWord
+     * @param $k
+     * @return int[]
+     */
+    protected function round($upperWord, $lowerWord, $k): array
     {
-        $rs_x = (($x << ($this->wordSize - $this->alphaShift)) + ($x >> $this->alphaShift)) & $this->modMask;
-        $add_sxy = ($rs_x + $y) & $this->modMask;
+        $rs_x = (($upperWord << ($this->wordSize - $this->alphaShift)) + ($upperWord >> $this->alphaShift)) & $this->modMask;
+        $add_sxy = ($rs_x + $lowerWord) & $this->modMask;
         $new_x = $k ^ $add_sxy;
-        $ls_y = (($y >> ($this->wordSize - $this->betaShift)) + ($y << $this->betaShift)) & $this->modMask;
+        $ls_y = (($lowerWord >> ($this->wordSize - $this->betaShift)) + ($lowerWord << $this->betaShift)) & $this->modMask;
         $new_y = $new_x ^ $ls_y;
 
         return [$new_x, $new_y];
     }
 
-    protected function encrypt_function(GMP $upperWord, GMP $lowerWord): array
+    protected function encryptRaw(GMP $upperWord, GMP $lowerWord): array
     {
-        $x = $upperWord;
-        $y = $lowerWord;
-
-        // Run encryption steps for appropriate number of rounds
         foreach ($this->keySchedule as $k) {
-            $rs_x = (($x << ($this->wordSize - $this->alphaShift)) + ($x >> $this->alphaShift)) & $this->modMask;
-            $add_sxy = ($rs_x + $y) & $this->modMask;
-            $x = $k ^ $add_sxy;
-            $ls_y = (($y >> ($this->wordSize - $this->betaShift)) + ($y << $this->betaShift)) & $this->modMask;
-            $y = $x ^ $ls_y;
+            [$upperWord, $lowerWord] = $this->round($upperWord, $lowerWord, $k);
         }
 
-        return [$x, $y];
+        return [$upperWord, $lowerWord];
     }
 
     public function encrypt(int|GMP $plainText): GMP
@@ -114,31 +118,41 @@ class Speck
         $b = gmp_and($this->gmp_shiftr($plainText, $this->wordSize), $this->modMask);
         $a = gmp_and($plainText, $this->modMask);
 
-        [$b, $a] = $this->encrypt_function($b, $a);
+        [$b, $a] = $this->encryptRaw($b, $a);
 
-        $ciphertext = ($b << $this->wordSize) + $a;
-
-        return $ciphertext;
+        return ($b << $this->wordSize) + $a;
     }
 
     // endregion
 
     // region Decryption
 
-    protected function decrypt_function(GMP $upperWord, GMP $lowerWord): array
+    /**
+     * Complete one round of reverse Feistel operation.
+     *
+     * @param $upperWord
+     * @param $lowerWord
+     * @param $k
+     * @return int[]
+     */
+    protected function reverseRound($upperWord, $lowerWord, $k): array
     {
-        $x = $upperWord;
-        $y = $lowerWord;
+        $xor_xy = $upperWord ^ $lowerWord;
+        $lowerWord = (($xor_xy << ($this->wordSize - $this->betaShift)) + ($xor_xy >> $this->betaShift)) & $this->modMask;
+        $xor_xk = $upperWord ^ $k;
+        $msub = (($xor_xk - $lowerWord) + $this->modMaskSub) % $this->modMaskSub;
+        $upperWord = (($msub >> ($this->wordSize - $this->alphaShift)) + ($msub << $this->alphaShift)) & $this->modMask;
 
+        return [$upperWord, $lowerWord];
+    }
+
+    protected function decryptRaw(GMP $upperWord, GMP $lowerWord): array
+    {
         foreach (array_reverse($this->keySchedule) as $k) {
-            $xor_xy = $x ^ $y;
-            $y = (($xor_xy << ($this->wordSize - $this->betaShift)) + ($xor_xy >> $this->betaShift)) & $this->modMask;
-            $xor_xk = $x ^ $k;
-            $msub = (($xor_xk - $y) + $this->modMaskSub) % $this->modMaskSub;
-            $x = (($msub >> ($this->wordSize - $this->alphaShift)) + ($msub << $this->alphaShift)) & $this->modMask;
+            $this->reverseRound($upperWord, $lowerWord, $k);
         }
 
-        return [$x, $y];
+        return [$upperWord, $lowerWord];
     }
 
     public function decrypt(int|GMP $ciphertext): GMP|int
@@ -146,11 +160,9 @@ class Speck
         $b = ($ciphertext >> $this->wordSize) & $this->modMask;
         $a = $ciphertext & $this->modMask;
 
-        [$b, $a] = $this->decrypt_function($b, $a);
+        [$b, $a] = $this->decryptRaw($b, $a);
 
-        $plaintext = ($b << $this->wordSize) + $a;
-
-        return $plaintext;
+        return ($b << $this->wordSize) + $a;
     }
 
     // endregion
