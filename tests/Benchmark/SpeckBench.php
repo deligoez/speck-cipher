@@ -32,7 +32,7 @@ class SpeckBench
     /**
      * @Revs(10000)
      * @Iterations(5)
-     * @Warmup(2)
+     * @Warmup(3)
      */
     public function benchCreateCipher(): void
     {
@@ -46,7 +46,7 @@ class SpeckBench
     /**
      * @Revs(10000)
      * @Iterations(5)
-     * @Warmup(2)
+     * @Warmup(3)
      * @BeforeMethods({"setup"})
      */
     public function benchEncrypt(): void
@@ -57,7 +57,7 @@ class SpeckBench
     /**
      * @Revs(10000)
      * @Iterations(5)
-     * @Warmup(2)
+     * @Warmup(3)
      * @BeforeMethods({"setup"})
      */
     public function benchDecrypt(): void
