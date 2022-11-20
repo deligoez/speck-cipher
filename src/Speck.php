@@ -79,7 +79,7 @@ class Speck
         }
 
         for ($i = 0; $i < $this->rounds - 1; $i++) {
-            [$lSchedule[], $this->keySchedule[]] = $this->round($lSchedule[$i], $this->keySchedule[$i], $i);
+            [$lSchedule[], $this->keySchedule[]] = $this->round($lSchedule[$i], $this->keySchedule[$i], gmp_init($i));
         }
     }
 
@@ -88,12 +88,10 @@ class Speck
     /**
      * Complete one round of Feistel operation.
      *
-     * @param $upperWord
-     * @param $lowerWord
-     * @param $k
+     *
      * @return int[]
      */
-    protected function round($upperWord, $lowerWord, $k): array
+    protected function round(GMP $upperWord, GMP $lowerWord, GMP $k): array
     {
         $rs_x = (($upperWord << ($this->wordSize - $this->alphaShift)) + ($upperWord >> $this->alphaShift)) & $this->modMask;
         $add_sxy = ($rs_x + $lowerWord) & $this->modMask;
@@ -135,7 +133,7 @@ class Speck
      * @param $k
      * @return int[]
      */
-    protected function reverseRound($upperWord, $lowerWord, $k): array
+    protected function reverseRound(GMP $upperWord, GMP $lowerWord, GMP $k): array
     {
         $xor_xy = $upperWord ^ $lowerWord;
         $lowerWord = (($xor_xy << ($this->wordSize - $this->betaShift)) + ($xor_xy >> $this->betaShift)) & $this->modMask;
@@ -169,14 +167,14 @@ class Speck
 
     // region Helpers
 
-    private function gmp_shiftl(int|GMP $x, int $n): GMP
+    private function gmp_shiftl(int|GMP $number, int $numberOfShifts): GMP
     {
-        return gmp_mul($x, gmp_pow(2, $n));
+        return gmp_mul($number, gmp_pow(2, $numberOfShifts));
     }
 
-    private function gmp_shiftr(int|GMP $x, int $n): GMP
+    private function gmp_shiftr(int|GMP $number, int $numberOfShifts): GMP
     {
-        return gmp_div($x, gmp_pow(2, $n));
+        return gmp_div($number, gmp_pow(2, $numberOfShifts));
     }
 
     // endregion
