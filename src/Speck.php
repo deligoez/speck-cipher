@@ -120,7 +120,7 @@ class Speck
 
         [$b, $a] = $this->encryptRaw($b, $a);
 
-        return ($b << $this->wordSize) + $a;
+        return gmp_add($this->gmp_shiftl($b, $this->wordSize), $a);
     }
 
     // endregion
@@ -157,12 +157,12 @@ class Speck
 
     public function decrypt(int|GMP $ciphertext): GMP|int
     {
-        $b = ($ciphertext >> $this->wordSize) & $this->modMask;
-        $a = $ciphertext & $this->modMask;
+        $b = gmp_and($this->gmp_shiftr($ciphertext, $this->wordSize), $this->modMask);
+        $a = gmp_and($ciphertext, $this->modMask);
 
         [$b, $a] = $this->decryptRaw($b, $a);
 
-        return ($b << $this->wordSize) + $a;
+        return gmp_add($this->gmp_shiftl($b, $this->wordSize), $a);
     }
 
     // endregion

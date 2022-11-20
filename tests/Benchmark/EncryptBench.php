@@ -9,6 +9,7 @@ use GMP;
 use PhpBench\Benchmark\Metadata\Annotations\BeforeMethods;
 use PhpBench\Benchmark\Metadata\Annotations\Iterations;
 use PhpBench\Benchmark\Metadata\Annotations\Revs;
+use PhpBench\Benchmark\Metadata\Annotations\Warmup;
 
 class EncryptBench
 {
@@ -31,6 +32,7 @@ class EncryptBench
     /**
      * @Revs(10000)
      * @Iterations(5)
+     * @Warmup(2)
      */
     public function benchCreateCipher(): void
     {
@@ -44,6 +46,7 @@ class EncryptBench
     /**
      * @Revs(10000)
      * @Iterations(5)
+     * @Warmup(2)
      * @BeforeMethods({"setup"})
      */
     public function benchEncrypt(): void
@@ -54,6 +57,7 @@ class EncryptBench
     /**
      * @Revs(10000)
      * @Iterations(5)
+     * @Warmup(2)
      * @BeforeMethods({"setup"})
      */
     public function benchDecrypt(): void
